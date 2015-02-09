@@ -25,6 +25,9 @@ class blockchain:
         ammount = float(self.jj['final_balance']) / 100000000
         return ammount
 
+    def tx_count(self):
+        return int(self.jj['n_tx'])
+
 class accounts:
     def __init__(self, filename):
         locale.setlocale(locale.LC_ALL, '')
@@ -49,14 +52,21 @@ class accounts:
                 elif 'xpub' == addr[0:4]:
                     # deterministic hierarchical public key
                     kk = pycoin.key.BIP32Node.BIP32Node.from_hwif(addr)
-                    for i in range(30):
-                        for j in range(2):
+                    for j in range(2):
+                        gap = 0
+                        for i in range(99999):
                             keypath = "%d/%d.pub" % (j, i)
+                            print(keypath)
                             addr = kk.subkey_for_path(keypath).address()
                             #print i, j, addr
                             ledger = blockchain(addr)
                             bal  = ledger.balance()
                             balance[name][addr] = [bal, '%s_%s_%d' % (desc, 'P' if 0 == j else 'Chg', i)]
+                            if bal == 0:
+                                if 0 == ledger.tx_count():
+                                    gap += 1
+                                    if gap > 10:
+                                        break
                 else:
                     kk = pycoin.key.electrum.ElectrumWallet(addr)
                     for i in range(20):
