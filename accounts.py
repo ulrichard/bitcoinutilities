@@ -86,7 +86,7 @@ class accounts:
                         gap = 0
                         for i in range(99999):
                             keypath = "%d/%d.pub" % (j, i)
-                            print(keypath)
+                            #print(keypath)
                             addr = kk.subkey_for_path(keypath).address()
                             #print i, j, addr
                             ledger = blockchain(addr, False)
