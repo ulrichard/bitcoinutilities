@@ -8,9 +8,14 @@ except:
     imp.load_module('electrum', *imp.find_module('lib'))
     import electrum
 
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
 class ElectrumClient:
     def __init__(self, server = None, proxy = None):
-        self.conf = electrum.SimpleConfig()
+        options={}
+#        options['electrum_path'] = os.environ['HOME'] + '/.electrum'
+        options['electrum_path'] = script_dir
+        self.conf = electrum.SimpleConfig(options)
         if None != server:
             self.conf.set_key('server', server, False)
         if None != proxy:
@@ -21,8 +26,9 @@ class ElectrumClient:
             self.conf.set_key('auto_cycle', True, False)
         print 'server: ', self.conf.get('server')
         print 'proxy:  ', self.conf.get('proxy')
-        self.sock = electrum.daemon.get_daemon(self.conf, True)
-        self.netw = electrum.NetworkProxy(self.sock, self.conf)
+#        self.sock = electrum.daemon.get_daemon(self.conf, True)
+#        self.netw = electrum.NetworkProxy(self.sock, self.conf)
+        self.netw = electrum.Network(self.conf)
         self.netw.start()
         self.timeout = 10000 # default is 10'000'000
 
@@ -65,9 +71,8 @@ class ElectrumClient:
 
 # test code
 if __name__ == "__main__":
-#    cli = ElectrumClient('192.168.2.41:50001:t', "{'host': '127.0.0.1', 'mode': 'socks5', 'port': '9090'}")
-#    cli = ElectrumClient('ecdsa.net:50002:s', '')
-    cli = ElectrumClient()
+    cli = ElectrumClient('ulrichard.ch:50002:s', '')
+#    cli = ElectrumClient()
     addr = '1JuArrY4wpG9v6bgDbuugPPvbZTTn5Vxou'
 
     hist = cli.get_history(addr)
