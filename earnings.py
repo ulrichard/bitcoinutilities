@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # Show the current balances
 
-import bitcoincharts, bitcoinaverage, accounts
+import bitcoincharts, bitcoinaverage, accounts, blockchain_info
 
 import httplib2
 import json
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     day = now
     for addr in reversed(addresses):
-        ledger = accounts.blockchain(addr, True)
+        ledger = blockchain_info.blockchain(addr, True)
         txs = ledger.get_transactions()
         ledgers[addr] = ledger
         dates = txs.keys()
@@ -60,7 +60,8 @@ if __name__ == "__main__":
     values = []
     valday = []
     valuesPerMonth = {}
-    valdayPerMonth = {}
+    CHFPerMonth = {}
+    USDPerMonth = {}
 
     while day <= now:
     # ToDo : fetch the conversion for the day
@@ -73,8 +74,9 @@ if __name__ == "__main__":
                 val += txs[day] / 100000000.0
 
         dailyCHF = btcavgCHF.get_avg(day)
+        dailyUSD = btcavgUSD.get_avg(day)
         if dailyCHF == 0:
-            dailyCHF = 0.9 * btcavgUSD.get_avg(day)
+            dailyCHF = 0.9 * dailyUSD
 
         print day, ' ', \
             string.rjust(locale.currency(val, grouping=True)[4:], 6), 'XBT  ', \
@@ -94,9 +96,11 @@ if __name__ == "__main__":
         month = '%d-%02d' % (day.year, day.month)
         if not valuesPerMonth.has_key(month):
             valuesPerMonth[month] = 0
-            valdayPerMonth[month] = 0
+            CHFPerMonth[month] = 0
+            USDPerMonth[month] = 0
         valuesPerMonth[month] += val
-        valdayPerMonth[month] += val * dailyCHF
+        CHFPerMonth[month] += val * dailyCHF
+        USDPerMonth[month] += val * dailyUSD
 
         day += datetime.timedelta(days=1)
 
@@ -112,7 +116,8 @@ if __name__ == "__main__":
     for month in months:
         print month, ' ', \
         string.rjust(locale.currency(valuesPerMonth[month], grouping=True)[4:], 6), 'XBT ', \
-        string.rjust(locale.currency(valdayPerMonth[month], grouping=True)[4:], 9), 'CHF '
+        string.rjust(locale.currency(CHFPerMonth[month], grouping=True)[4:], 9), 'CHF '
+        string.rjust(locale.currency(USDPerMonth[month], grouping=True)[4:], 9), 'USD '
 
     print 'earned between ', dates[0], ' and ', dates[len(dates) - 1], ' : ', string.rjust(locale.currency(sum, grouping=True)[4:], 6), 'XBT'
     print 'at yesterdays exchange rate  ', \

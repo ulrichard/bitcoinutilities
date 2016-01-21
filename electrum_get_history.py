@@ -30,16 +30,13 @@ class ElectrumClient:
 #        self.netw = electrum.NetworkProxy(self.sock, self.conf)
         self.netw = electrum.Network(self.conf)
         self.netw.start()
-        self.timeout = 10000 # default is 10'000'000
 
     def get_history(self, addr):
-        requ = [('blockchain.address.get_history', [addr])]
-        hist = self.netw.synchronous_get(requ, self.timeout)[0]
+        hist = self.netw.synchronous_get(('blockchain.address.get_history', [addr]))
         return hist
 
     def get_transaction_details(self, tx_hash):
-        requ = [('blockchain.transaction.get', [tx_hash])]
-        raw = self.netw.synchronous_get(requ, self.timeout)[0] 
+        raw = self.netw.synchronous_get(('blockchain.transaction.get', [tx_hash]))
         return electrum.Transaction.deserialize(raw)
 
     def get_balance(self, address):
