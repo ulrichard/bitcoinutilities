@@ -29,6 +29,7 @@ class accounts:
                     kk0 = pycoin.key.BIP32Node.BIP32Node.from_hwif(addr[0])
                     kk1 = pycoin.key.BIP32Node.BIP32Node.from_hwif(addr[1])
                     kk2 = pycoin.key.BIP32Node.BIP32Node.from_hwif(addr[2])
+
                     for j in range(2): # receive and change addresses
                         gap = 0
                         for i in range(99999):
@@ -37,11 +38,12 @@ class accounts:
                             sub0 = kk0.subkey_for_path(keypath).sec()
                             sub1 = kk1.subkey_for_path(keypath).sec()
                             sub2 = kk2.subkey_for_path(keypath).sec()
-                            #print i, j, addr
-                            underlying_script = ScriptMultisig(n=2, sec_keys=[sub0, sub1, sub2]).script()
+                            sub = sorted([sub0, sub1, sub2])
+                            underlying_script = ScriptMultisig(n=2, sec_keys=[sub[0], sub[1], sub[2]]).script()
                             addr = address_for_pay_to_script(underlying_script, netcode="BTC")
                             ledger = blockchain_info.blockchain(addr, False)
                             bal  = ledger.balance()
+                            print desc, i, j, addr, bal
                             balance[name][addr] = [bal, '%s_%s_%d' % (desc, 'P' if 0 == j else 'Chg', i)]
                             if bal == 0:
                                 if 0 == ledger.tx_count():
