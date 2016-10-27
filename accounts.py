@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # Find the current balances for known addresses
 
-import blockchain_info
+import blockchain_info, electrum_client
 import json
 import locale
 import pycoin.key.BIP32Node, pycoin.key.Key, pycoin.key.electrum
@@ -13,6 +13,11 @@ class accounts:
         locale.setlocale(locale.LC_ALL, '')
         self.addresses = json.load(open(filename))
 
+    def get_balance(self, addr):
+#        ledger = blockchain_info.blockchain(addr, False)
+        ledger = electrum_client.electrum_cli(addr)
+        bal  = ledger.balance()
+        
     def balances(self, filterName = ''):
         balance = {}
         for i in range(len(self.addresses)):
@@ -49,8 +54,7 @@ class accounts:
                                 required_signatures = 3 if k == 4 else 2
                                 underlying_script = ScriptMultisig(n=required_signatures, sec_keys=[sub[0], sub[1], sub[2]]).script()
                                 addr = address_for_pay_to_script(underlying_script, netcode="BTC")
-                                ledger = blockchain_info.blockchain(addr, False)
-                                bal  = ledger.balance()
+                                bal  = self.get_balance(addr)
                                 #print desc, i, j, addr, bal
                                 balance[name][addr] = [bal, '%s_%s_%d' % (desc, 'P' if 0 == j else 'Chg', i)]
                                 if bal == 0:
@@ -60,8 +64,7 @@ class accounts:
                                             break
                 elif len(addr) < 40:
                     # regular address
-                    ledger = blockchain_info.blockchain(addr, False)
-                    bal  = ledger.balance()
+                    bal  = self.get_balance(addr)
                     balance[name][addr] = [bal, desc]
                 elif 'xpub' == addr[0:4]:
                     # deterministic hierarchical public key
@@ -73,8 +76,7 @@ class accounts:
                             #print(keypath)
                             addr = kk.subkey_for_path(keypath).address()
                             #print i, j, addr
-                            ledger = blockchain_info.blockchain(addr, False)
-                            bal  = ledger.balance()
+                            bal  = self.get_balance(addr)
                             balance[name][addr] = [bal, '%s_%s_%d' % (desc, 'P' if 0 == j else 'Chg', i)]
                             if bal == 0:
                                 if 0 == ledger.tx_count():
@@ -88,8 +90,7 @@ class accounts:
                             keypath = "%d/%d" % (j, i)
                             addr = kk.subkey(keypath).address()
                             #print i, j, addr
-                            ledger = blockchain_info.blockchain(addr, False)
-                            bal  = ledger.balance()
+                            bal  = self.get_balance(addr)
                             balance[name][addr] = [bal, '%s_%s_%d' % (desc, 'P' if 0 == j else 'Chg', i)]
 
         return balance

@@ -3,31 +3,24 @@
 # Stratum protocol doc  : http://docs.electrum.org/en/latest/protocol.html
 # jsonrpc documentation : https://pypi.python.org/pypi/jsonrpclib
 
-import jsonrpclib 
+import subprocess 
 import json
 
 class electrum_cli:
-    def __init__(self, addr, withTx):
+    def __init__(self, addr):
         self.addr = addr
-#        self.host = 'https://ulrichard.ch'
-#        self.port = 50002
-        host = 'https://192.168.2.8'
-        port = 50001
-        self.server = jsonrpclib.Server('http://%s:%d' % (host, port)) 
-
-#    def total_received(self):
-#        ammount = self.balance()
-#        return ammount
 
     def balance(self):
-        resp = self.server.blockchain.address.get_balance(self.addr)
-        ammount = resp['confirmed'] / 100000000
-        return ammount
+        p = subprocess.Popen(['electrum', 'getaddressbalance', self.addr], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        raw_data = p.communicate()[0]
+    
+        data = json.loads(raw_data)
+        return data['confirmed']
 
-#    def tx_count(self):
-#        return 42
 
-#    def get_transactions(self):
-#        return self.transactions
-
+# test code
+if __name__ == "__main__":
+    cli = electrum_cli('12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX')
+    bal = cli.balance()
+    print(bal)
 
