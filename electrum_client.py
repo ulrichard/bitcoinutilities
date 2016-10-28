@@ -14,9 +14,11 @@ class electrum_cli:
         p = subprocess.Popen(['electrum', 'getaddressbalance', self.addr], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         raw_data = p.communicate()[0]
     
-        data = json.loads(raw_data)
-        return data['confirmed']
-
+        try:
+            data = json.loads(raw_data)
+            return data['confirmed']
+        except:
+            return 0
 
 # test code
 if __name__ == "__main__":
