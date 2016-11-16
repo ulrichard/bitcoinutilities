@@ -5,24 +5,35 @@
 
 import subprocess 
 import json
+from pycoin.tx.Tx import Tx
 
 class electrum_cli:
-    def __init__(self, addr):
-        self.addr = addr
-
-    def balance(self):
-        p = subprocess.Popen(['electrum', 'getaddressbalance', self.addr], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    def balance(self, addr):
+        p = subprocess.Popen(['electrum', 'getaddressbalance', addr], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         raw_data = p.communicate()[0]
-    
+
         try:
             data = json.loads(raw_data)
-            return data['confirmed']
+            balance = data['confirmed']
+#            print(addr, balance)
+            return balance
         except:
             return 0
 
+    def load_tx(self, txid):
+        p = subprocess.Popen(['electrum', 'gettransaction', txid], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        raw_data = p.communicate()[0]
+
+        data = json.loads(raw_data)
+        txhex = data['hex']
+        tx = Tx.from_hex(txhex)
+
+        return tx
+    
+
 # test code
 if __name__ == "__main__":
-    cli = electrum_cli('12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX')
-    bal = cli.balance()
+    cli = electrum_cli()
+    bal = cli.balance('12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX')
     print(bal)
 

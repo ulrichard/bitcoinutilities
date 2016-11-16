@@ -15,8 +15,8 @@ class accounts:
 
     def get_balance(self, addr):
 #        ledger = blockchain_info.blockchain(addr, False)
-        ledger = electrum_client.electrum_cli(addr)
-        bal  = ledger.balance()
+        ledger = electrum_client.electrum_cli()
+        bal  = ledger.balance(addr)
         
     def balances(self, filterName = ''):
         balance = {}
