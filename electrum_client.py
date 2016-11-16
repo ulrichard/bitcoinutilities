@@ -20,6 +20,15 @@ class electrum_cli:
         except:
             return 0
 
+    def history(self, addr):
+        p = subprocess.Popen(['electrum', 'getaddresshistory', addr], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        raw_data = p.communicate()[0]
+        data = json.loads(raw_data)
+        txs = []
+        for tx in data:
+            txs.append(tx['tx_hash'])
+        return txs
+
     def load_tx(self, txid):
         p = subprocess.Popen(['electrum', 'gettransaction', txid], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         raw_data = p.communicate()[0]

@@ -21,20 +21,30 @@ class bitsquare:
         tx_node = g.node(taker_fee_name)
         for inp in self.taker_fee_tx.txs_in:
             addr = inp.bitcoin_address()
+            addr = 'taker ' + addr
             n = g.node(addr)
             previous_tx = self.ledger.load_tx(pycoin.serialize.b2h_rev(inp.previous_hash))
             prev_outp = previous_tx.txs_out[inp.previous_index]
             previous_coin_value = pycoin.convention.satoshi_to_btc(prev_outp.coin_value)
             g.edge(addr, taker_fee_name, label=('%f' % previous_coin_value))
+        intermediate_addr = ''
         for outp in self.taker_fee_tx.txs_out:
             addr = outp.bitcoin_address()
             if addr in self.fee_addresses:
                 addr = 'bitsquare fees'
             else:
-                addr = 'taker ' + addr
+                intermediate_addr = addr
+                addr = 'intermediate ' + addr
             n = g.node(addr)
             coin_value = pycoin.convention.satoshi_to_btc(outp.coin_value)
             g.edge(taker_fee_name, addr, label=('%f' % coin_value))
+        if intermediate_addr <> '':
+            history = self.ledger.history(intermediate_addr)
+            for tx in history:
+                if tx <> self.taker_fee_tx_id:
+                    trade_tx = self.ledger.load_tx(tx)
+                    g.node(tx)
+                    g.edge('intermediate ' + intermediate_addr, tx)
         
         g.render(filename=filename)
 	
