@@ -1,0 +1,27 @@
+[
+{"fees":[
+    "1FdFzBazmHQxbUbdCUJwuCtR37DrZrEobu", 
+    "19PGJpBbHqmAWTkqX8NRdTnTRDvkBvqcSp"
+]},
+{"self":"xpub_comes_here"},
+{"people":[
+    {"other1":[
+        "some_address",
+        "some_address",
+        "some_address",
+        "some_address",
+        "some_address",
+        "some_address"
+    ]},
+    {"Manfred_Karrer":[
+        "some_address",
+        "some_address",
+        "some_address",
+        "some_address"
+    ]},
+    {"Satoshi_Nakamoto":[
+        "some_address",
+        "some_address"
+    ]}
+]}
+]
