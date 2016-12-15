@@ -3,7 +3,7 @@
 
 import blockchain_info
 import json
-import locale,os
+import locale, os
 import pycoin.key.BIP32Node, pycoin.key.Key, pycoin.key.electrum
 from pycoin.tx.pay_to import address_for_pay_to_script, build_hash160_lookup, build_p2sh_lookup, ScriptMultisig
 
