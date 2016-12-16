@@ -2,10 +2,17 @@
 # analyze a bitsquare transaction, starting from the taker fee transaction
 
 import electrum_client
-import locale, datetime, string, os, subprocess, json
-import pycoin
+import locale, datetime, string, os, subprocess, json, inspect, sys
+from decimal import Decimal
 import graphviz as gv
-from pycoin.tx.TxOut import standard_tx_out_script
+
+# allow import from subdirectory
+currentDir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+pycoinDir = currentDir + '/pycoin'
+if pycoinDir not in sys.path:
+    sys.path.insert(0, pycoinDir)
+
+import pycoin
 from pycoin.tx.script.tools import disassemble
 
 
@@ -37,15 +44,6 @@ class bitsquare:
     def is_fee_addr(self, addr):
         if addr in self.fee_addresses:
             return True
-        return False
-
-    def is_lock_addr(self, addr):
-        try:
-            script = standard_tx_out_script(addr)
-            script = disassemble(script)
-            print(script)
-        except:
-            print('error analyzing addr: ', addr)
         return False
 
     def is_offer_fee_tx(self, tx):
@@ -102,9 +100,14 @@ class bitsquare:
         has_deposit = False
         for outp in tx.txs_out:
             coin_value = pycoin.convention.satoshi_to_btc(outp.coin_value)
-            if coin_value == 0.01:
+            if abs(coin_value - Decimal(0.01)) < 0.0001:
                 has_deposit = True
-        return has_deposit
+        if not has_deposit:
+            return False
+        addr = tx.txs_in[0].bitcoin_address()
+        if addr != '(unknown)':
+            return False
+        return True
 
     def get_tx_out_sum(self, tx):
         sumval = 0
@@ -140,8 +143,6 @@ class bitsquare:
             self.graph_detail.edge(addr, 'bitsquare fees')
         elif self.get_addr_owner(addr) != '':
             self.graph_detail.edge(addr, self.get_addr_owner(addr))
-        elif self.is_lock_addr(addr):
-            addr_txt = 'intermediate ' + addr
         # mark as handled
         self.handled_addresses.add(addr)
         # explore further
@@ -162,26 +163,28 @@ class bitsquare:
         self.handled_transactions.add(txid)
 
         tx = self.ledger.load_tx(txid)
+        tx_label = ''
         if self.is_offer_fee_tx(tx):
-            tx_name = 'offer_fee ' + txid 
+            tx_label = 'offer_fee'
         elif self.is_taker_fee_tx(tx):
-            tx_name = 'taker_fee ' + txid 
+            tx_label = 'taker_fee'
         elif self.is_deposit_tx(tx):
-            tx_name = 'deposit ' + txid
+            tx_label = 'deposit'
         elif self.is_payout(tx):
-            tx_name = 'payout ' + txid
-        else:
-            tx_name = txid
-        self.graph_detail.node(tx_name, shape='rectangle')
+            tx_label = 'payout'
+        tx_name = tx_label + ' ' + txid
+        self.graph_detail.node(tx_name, shape = 'rectangle', label = tx_label)
 
         for inp in tx.txs_in:
             addr = inp.bitcoin_address()
-            if addr != '(unknown)':
-                self.handle_address(addr, depth)
-                previous_tx = self.ledger.load_tx(pycoin.serialize.b2h_rev(inp.previous_hash))
-                prev_outp = previous_tx.txs_out[inp.previous_index]
-                previous_coin_value = pycoin.convention.satoshi_to_btc(prev_outp.coin_value)
-                self.graph_detail.edge(addr, tx_name, label=('%f' % previous_coin_value))
+            if addr == '(unknown)':
+                print("(unknown)")
+                addr = pycoin.tx.pay_to.address_for_pay_to_script(inp.script)
+            self.handle_address(addr, depth)
+            previous_tx = self.ledger.load_tx(pycoin.serialize.b2h_rev(inp.previous_hash))
+            prev_outp = previous_tx.txs_out[inp.previous_index]
+            previous_coin_value = pycoin.convention.satoshi_to_btc(prev_outp.coin_value)
+            self.graph_detail.edge(addr, tx_name, label=('%f' % previous_coin_value))
             
         for outp in tx.txs_out:
             addr = outp.bitcoin_address()
@@ -199,6 +202,7 @@ if __name__ == "__main__":
 
     bs = bitsquare()
 
+    # feed the transactions of a single random bitsquare transaction
     bs.handle_tx("1af578e93f133e6b7999251b92073e44e360bb73219cf1c310a242e68133859b", 1) # offer fee
     bs.handle_tx("f73b9555ce5c06b05653e35d148e9ebd5abc348736b9b64c811183abdea2c6a1", 1) # taker fee
     bs.handle_tx("5312737afa52b04bce443266e57e26567afc7903c171733dc54540f325d4f512", 1) # deposit transaction
