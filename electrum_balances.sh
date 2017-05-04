@@ -23,3 +23,4 @@ done
 
 chf=$(echo "$total $btcchf * p" | dc)
 printf "\n%25s\t%.8f\t%'.2f\n" total $total $chf
+echo $chf
