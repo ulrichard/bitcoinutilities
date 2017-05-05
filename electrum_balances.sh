@@ -1,8 +1,8 @@
 #! /bin/bash
 
-totalchf=0
+total=0
 btcchf=$(curl -s https://api.coinmarketcap.com/v1/ticker/bitcoin/?convert=CHF | jq -r '.[0].price_chf')
-echo $btcchf
+echo BTC-CHF: $btcchf
 
 printf "%25s\t%10s\t%8s\n" file BTC CHF
 
@@ -14,11 +14,12 @@ do
         chf=$(echo "$balance $btcchf * p" | dc)
         printf "%25s\t%.8f\t%'.2f\n" $(basename $f) $balance $chf
 
-        if [ "family_and_friends" != "$(basename $f)" ]
+        if [ "family_and_friends" != "$(basename $f)" ] && [  "Mirella" != "$(basename $f)" ]
         then
-            totalchf=$(echo "$totalchf $chf + p" | dc)
+            total=$(echo "$total $balance + p" | dc)
         fi
     fi
 done
 
-printf "total: %'.2f\n" $totalchf
+chf=$(echo "$total $btcchf * p" | dc)
+printf "\n%25s\t%.8f\t%'.2f\n" total $total $chf
