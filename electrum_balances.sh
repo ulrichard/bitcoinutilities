@@ -10,6 +10,7 @@ for f in ~/.electrum/wallets/*
 do
     if [ -f "$f" ]
     then
+        electrum daemon load_wallet -w $f > /dev/null
         balance=$(electrum getbalance -w $f | jq -r '.confirmed')
         chf=$(echo "$balance $btcchf * p" | dc)
         printf "%25s\t%.8f\t%'.2f\n" $(basename $f) $balance $chf
