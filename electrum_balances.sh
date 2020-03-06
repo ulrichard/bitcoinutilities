@@ -1,7 +1,8 @@
 #! /bin/bash
 
 total=0
-btcchf=$(curl -s https://api.coinmarketcap.com/v1/ticker/bitcoin/?convert=CHF | jq -r '.[0].price_chf')
+prices=$(curl ${CURL_PROXY} -H "X-CMC_PRO_API_KEY: 67cb5457-a155-47d8-8a36-1c81872b7509" -H "Accept: application/json" -d "start=1&limit=1000&convert=CHF" -G https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest 2> /dev/null)
+btcchf=$(echo $prices | jq -r '.data[] | select(.symbol=="BTC") | .quote.CHF.price')
 echo BTC-CHF: $btcchf
 
 printf "%25s\t%10s\t%8s\n" file BTC CHF
